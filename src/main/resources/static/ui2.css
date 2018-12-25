@@ -1,0 +1,52 @@
+table-wrapper {
+  max-height: 400px;
+  overflow: auto;
+  width: 100%;
+  float: right;
+  display:inline-block;
+}
+table-earnings {
+  /*background: #F3F5F6;*/
+  font-family: Verdana;
+}
+pre{
+  width: 100%; 
+  height: 400px;
+  background-color: #23241f;
+  position: relative;
+  padding-left: 0px;
+  /*overflow: hidden;*/
+}
+code{
+  display: block;
+  font-family: Verdana;
+  font-size: 12px;
+}
+code.has-numbering {
+  margin-left: 21px;
+}
+pre-numbering {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  padding: 15px 0 0 0;
+  border-right: 1px solid #C3CCD0;
+  border-radius: 3px 0 0 3px;
+  text-align: center;
+  font-family: Verdana;
+  font-size: 12px;
+  color: #FFF;
+}
+console {
+  padding-left: 8px;
+  padding-top: 3px;
+  margin-top: 5px; 
+  width: 100%;
+  height: 100px;
+  float: right;
+  display:inline-block;
+  border: 0.8px solid #D5D8DC;
+  font-family: Verdana;
+  font-size: 15px;
+}

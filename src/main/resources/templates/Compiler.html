@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="multipart/form-data; charset=utf-8" />
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>PL/0 Compiler</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+
+    <style type="text/css">
+        .input{
+            width: 100%;
+            position: relative;
+            font-family: Source Code Variable Semibold,monospace;
+            font-size: 16px;
+            height: 200px;
+        }
+        .result{
+            padding-left: 10px;
+            width: 100%;
+            /*border: 1px solid rgba(107, 110, 114, 0.96);*/
+            font-family: Verdana,monospace;
+            font-size: 15px;
+            height: 343px;
+            overflow-y: scroll;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container" >
+    <div class="page-header" style="margin-top: 0; margin-bottom: 7PX; padding-bottom: 0;">
+        <h3>PL/0 Compiler <small>  16211035 狄尚哲</small></h3>
+    </div>
+
+    <ol class="breadcrumb" style="margin-bottom: 5px">
+        <li><a href="lexer">Lexer</a></li>
+        <li><a href="opg">OPG</a></li>
+        <li class="active">Compiler</li>
+    </ol>
+
+    <div class="row" style="margin: 0">
+        <div class="col-md-6">
+            <div class="row">
+                <h4>Code</h4>
+                <pre id="code" class="input" style="height: 300px;"></pre>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="file" id="input_file" onchange="loadFile()">
+                </div>
+                <div class="col-md-5"></div>
+                <div class="col-md-1">
+                    <button id="compile" class="btn btn-primary" data-loading-text="Compiling...">
+                        编译
+                    </button>
+                </div>
+                <div class="col-md-2" style="float: right; margin-right: 15px;">
+                    <button id="run" class="btn btn-success" data-loading-text="Running...">
+                        编译并运行
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <h4>Input:</h4>
+                <pre id="input" class="input"></pre>
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+            <div class="row" style="margin-left: 20px">
+                <h4>&nbsp;P-code </h4>
+                <div class="result" id="pcode">
+                    <table class="table table-hover table-bordered table-striped table-earnings">
+                        <thead>
+                            <tr>
+                                <th scope="col">No.</th>
+                                <th scope="col">Operation</th>
+                                <th scope="col">Layer</th>
+                                <th scope="col">Address</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="row" style="margin-left: 20px">
+                <h4>Output:</h4>
+                <pre id="output" class="input"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+
+<script type="text/javascript">
+    const code = ace.edit("code");
+    code.setTheme("ace/theme/chrome");
+    code.session.setMode("ace/mode/pascal");
+
+    const input = ace.edit("input");
+    input.setTheme("ace/theme/chrome");
+    input.session.setMode("ace/mode/plain_text");
+    input.renderer.setShowGutter(false);
+
+    const output = ace.edit("output");
+    output.setTheme("ace/theme/chrome");
+    output.session.setMode("ace/mode/plain_text");
+    output.setOptions({
+        autoScrollEditorIntoView: true
+    });
+    output.setReadOnly(true);  // false to make it editable
+    output.renderer.setShowGutter(false);
+
+    function loadFile() {
+        let file = document.getElementById("input_file").files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                code.setValue(evt.target.result);
+                code.clearSelection();
+            };
+            reader.onerror = function () {
+                alert("Error when reading file!");
+            }
+        }
+    }
+
+    function fillPcode(pcodeList) {
+        // p-code
+        let s = '<table class="table table-hover table-bordered table-striped table-earnings">';
+        s += '<thead><tr><th scope="col">No.</th><th scope="col">Operation</th><th scope="col">Layer</th><th scope="col">Address</th>';
+        s += '<tbody>';
+        $.each(pcodeList, function (i, pcode) {
+            let no = i + 1;
+            s += '<tr>';
+            s += '<td>' + no + '</td>';
+            s += '<td>' + pcode['f'] + '</td>';
+            s += '<td>' + pcode['l'] + '</td>';
+            s += '<td>' + pcode['a'] + '</td>';
+            s += '</tr>';
+        });
+        s += '</tbody></table>';
+        $('#pcode').html(s);
+    }
+
+    function fillOutput(errorList, outputList) {
+        let s = '';
+        // output
+        $.each(outputList, function (i, output) {
+            s += output;
+            s += '\n';
+        });
+        // error
+        if(errorList != null){
+            $.each(errorList, function (i, error) {
+                s += 'Error(Line ' + error['line'] + ', Column ' + error['col'] + '): ' + error['kind'] + '\n';
+            });
+        }
+        output.setValue(s);
+        output.clearSelection();
+    }
+
+    $('#compile').click(function (e) {
+        let data = {};
+        data.code = code.getValue();
+        if(code.getValue() != null && code.getValue() !== ""){
+            e.preventDefault();
+            $.ajax({
+                url: '/compiler/compile',
+                type: 'post',
+                data: JSON.stringify(data),
+                contentType: "application/json;charset=utf-8",
+                success: function (json) {
+                    json = JSON.parse(json);
+                    const pcodeList = json['pcodeList'];
+                    const errorList = json['errorList'];
+
+                    console.log(errorList);
+                    console.log(pcodeList);
+
+                    if(errorList.length === 0){
+                        fillOutput(null, ["编译成功，可以解释执行！", "若有输入，请先输入数据"]);
+                    }
+                    else{
+                        fillOutput(errorList, ["编译失败！"]);
+                    }
+                    fillPcode(pcodeList);
+                }
+            });
+        }
+    });
+
+    $('#run').click(function (e) {
+        let data = {};
+        data.code = code.getValue();
+        if(code.getValue() != null && code.getValue() !== ""){
+            data.input = input.getValue();
+            e.preventDefault();
+            $.ajax({
+                url: '/compiler/interpret',
+                type: 'post',
+                data: JSON.stringify(data),
+                contentType: "application/json;charset=utf-8",
+                success: function (json) {
+                    json = JSON.parse(json);
+                    const pcodeList = json['pcodeList'];
+                    const errorList = json['errorList'];
+                    const outputList = json['outputList'];
+
+                    console.log(errorList);
+                    console.log(pcodeList);
+                    console.log(outputList);
+
+                    fillPcode(pcodeList);
+                    if(errorList.length === 0)
+                        fillOutput(null, outputList);
+                    else
+                        fillOutput(errorList, ["编译失败！"]);
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
+
